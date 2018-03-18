@@ -4,44 +4,24 @@ namespace App\Models;
 
 class Deposit extends ElegantModel
 {
- 	/**
-     * The database table used by the model.
-     *
-     * @var string
-     */
     protected $table = 'deposits';
+    protected $key = 'id';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = ['customer_id', 'amount','bonus_applied'];
+    protected $columns = ['customer_id', 'amount', 'bonus_applied'];
 
-    /**
-     * The relations to eager load on every query.
-     *
-     * @var array
-     */
-    protected $with = [];
+    // public function getCustomer()
+    // {
+    // }
 
-    public function customer()
-    {
-        return $this->belongsTo('App\Models\Customer');
-    }
-
-    protected $rules = [
+    protected $insert_rules = [
         'amount' => 'required|numeric|between:0.01,9999999999999.99',
+        'bonus_applied' => 'numeric|between:0.00,9999999999999.99',
         'customer_id' => 'required|exists:customers,id'
     ];
 
-    /**
-     * The attributes that should be casted to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'id' => 'integer',
-        'customer_id' => 'integer'
+    protected $update_rules = [
+        'amount' => 'required|numeric|between:0.01,9999999999999.99',
+        'bonus_applied' => 'numeric|between:0.00,9999999999999.99',
+        'customer_id' => 'required|exists:customers,id'
     ];
 }

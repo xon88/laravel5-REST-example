@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-//use DB;
+use DB;
 use Response;
 
 use App\Models\Customer;
@@ -23,8 +23,10 @@ class DepositController extends Controller
     public function __construct()
     {
         //apply middleware
-        $this->middleware('checkcustomer', ['only' => [
-            'index',
+        $this->middleware('getcustomer', ['only' => [
+            'index'
+        ]]);
+        $this->middleware('getcustomer:true', ['only' => [
             'store'
         ]]);
     }
@@ -37,10 +39,8 @@ class DepositController extends Controller
     public function index(Request $request)
     {
         $customer = $request->attributes->get('customer');
-                
-        $deposits = $customer->deposits()->get();
         
-        return $deposits;
+        return Response::json($customer->getMyDeposits(), 200);
     }
 
     /**
@@ -61,40 +61,50 @@ class DepositController extends Controller
      */
     public function store(Request $request)
     {
-        //todo: lock db
         
         $customer = $request->attributes->get('customer');
 
         $deposit = new Deposit();
 
-        $input = $deposit->getFillableFromArray(Input::all());
-        $input['customer_id'] = $customer->id;
+        $input = $deposit->extractValidColumns(Input::all());
 
-        if (!$deposit->validate($input)) {
+        $input['customer_id'] = $customer->getData('id');
+
+        if (!$deposit->validateInsert($input)) {
             return Response::json(array('error' => 'Parameters failed validation!', 'validation' => $deposit->errors()), 422);
-        };
-
-        $deposit->fill($input);
-        //$deposit->customer_id = $customer->id;
-        //$deposit->customer()->associate($customer);
+        }
 
         //apply bonus for every 3rd deposit of the customer
-        $deposit->bonus_applied = 0;
-        if (($customer->deposits()->count()+1) % 3 == 0)
+        $input['bonus_applied'] = 0;
+        if (($customer->countMyDeposits()+1) % 3 == 0)
         {
-            $deposit->bonus_applied = $deposit->amount * ($customer->bonus_parameter / 100);
+            $input['bonus_applied'] = $input['amount'] * ($customer->getData('bonus_parameter') / 100);
         }
 
-        $customer->real_money_balance += $deposit->amount;
-        $customer->bonus_balance += $deposit->bonus_applied;
+        $deposit->fillData($input);
+
+        $new_real_money_balance = $customer->getData('real_money_balance') + $deposit->getData('amount');
+        $customer->setData('real_money_balance', $new_real_money_balance);
+
+        $new_bonus_balance = $customer->getData('bonus_balance') + $deposit->getData('bonus_applied');
+        $customer->setData('bonus_balance', $new_bonus_balance);
 
         try{
-            $deposit->save();
-            $customer->save();
-            return Response::json($customer, 201);
+            //DB::beginTransaction();
+
+            $success = $deposit->insertRecord() && $customer->updateRecord();
+
+            if (!$success) {
+                DB::rollBack();
+                return Response::json(array('error' => 'Error occurred while inserting or updating record. Transaction has been cancelled and rolled back.'),400);
+            }
+
+            DB::commit();
+            return Response::json($customer->getData(),200);
         }
         catch (\Exception $e){
-            return Response::json(array('error' => 'Data Not Acceptable'), 406);
+            DB::rollBack();
+            return Response::json(array('error' => $e->getMessage()),406); //'Data Not Acceptable'), 406);
         }
     }
 

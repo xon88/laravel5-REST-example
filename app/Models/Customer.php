@@ -1,70 +1,90 @@
 <?php
 
 namespace App\Models;
+use DB;
 
 class Customer extends ElegantModel
 {
- 	/**
-     * The database table used by the model.
-     *
-     * @var string
-     */
     protected $table = 'customers';
+    protected $key = 'id';
+    protected $optimisticLock = true;
+    
+    protected $columns = ['first_name', 'last_name', 'email', 'gender', 'country_code', 'bonus_parameter', 'real_money_balance', 'bonus_balance'];
+
+    protected $appends = ['full_name', 'balance'];
+
+    protected function getExtra($extra)
+    {
+        switch ($extra) {
+            case 'full_name':
+                return $this->getData('first_name').' '.$this->getData('last_name');
+                //break;
+            case 'balance':
+                return $this->getData('real_money_balance') + $this->getData('bonus_balance');
+                //break;
+            default:
+               return null;
+        }
+    }
 
     /**
-     * The attributes that are mass assignable.
+     * Queries the withdrawals table to retrieve the withdrawals of the current customer.
      *
-     * @var array
+     * @return array
      */
-    protected $fillable = ['first_name', 'last_name', 'email', 'gender', 'country_code', 'bonus_parameter','real_money_balance','bonus_balance'];
+    public function getMyWithdrawals()
+    {
+        $query = "SELECT * FROM withdrawals WHERE customer_id = :customer_id";
+        $placeholders = ['customer_id'=>$this->getData('id')];
+
+        $withdrawals = DB::select(DB::raw($query), $placeholders);
+        
+        return $withdrawals;
+    }
 
     /**
-     * The relations to eager load on every query.
+     * Queries the deposits table to retrieve the deposits of the current customer.
      *
-     * @var array
+     * @return array
      */
-    protected $with = [];
+    public function getMyDeposits()
+    {
+        $query = "SELECT * FROM deposits WHERE customer_id = :customer_id";
+        $placeholders = ['customer_id'=>$this->getData('id')];
+
+        $deposits = DB::select(DB::raw($query), $placeholders);
+        
+        return $deposits;
+    }
 
     /**
-     * The accessors to append to the model's array form.
+     * Queries the deposits table to retrieve a count of the number
+     * of deposits the current customer has made.
      *
-     * @var array
+     * @return array
      */
-    protected $appends = ['full_name','balance'];
-
-    public function getFullNameAttribute()
+    public function countMyDeposits()
     {
-        $pad = function($text) {
-            if (strlen($text) > 0) {
-                return $text.' ';
-            }
-            return '';
-        };
+        $query = "SELECT count(*) AS total FROM deposits WHERE customer_id = :customer_id";
+        $placeholders = ['customer_id'=>$this->getData('id')];
 
-        return $pad($this->first_name).$this->last_name;
+        $result = DB::select(DB::raw($query), $placeholders);
+        
+        return $result[0]['total'];
     }
 
-    public function getBalanceAttribute()
-    {
-        return $this->real_money_balance + $this->bonus_balance;
-    }
+    protected $insert_rules = [
+        'first_name' => 'required|string|min:2',
+        'last_name' => 'required|string|min:2',
+        'gender' => 'required|in:M,F,O,U', //Male/Female/Other/Unknown
+        'email' => 'required|email|unique:customers,email',
+        'bonus_parameter' => 'required|numeric|between:5.00,20.00',
+        'country_code' => 'required|string|size:2|exists:countries,id',
+        'real_money_balance' => 'numeric|between:0.00,9999999999999.99',
+        'bonus_balance' => 'numeric|between:0.00,9999999999999.99'
+    ];
 
-    public function country()
-    {
-        return $this->belongsTo('App\Models\Country');
-    }
-
-    public function deposits()
-    {
-        return $this->hasMany('App\Models\Deposit');
-    }
-
-    public function withdrawals()
-    {
-        return $this->hasMany('App\Models\Withdrawal');
-    }
-
-    protected $rules = [
+    protected $update_rules = [
         'first_name' => 'required|string|min:2',
         'last_name' => 'required|string|min:2',
         'gender' => 'required|in:M,F,O,U', //Male/Female/Other/Unknown
@@ -74,16 +94,5 @@ class Customer extends ElegantModel
         'real_money_balance' => 'numeric|between:0.00,9999999999999.99',
         'bonus_balance' => 'numeric|between:0.00,9999999999999.99'
     ];
-
-    /**
-     * The attributes that should be casted to native types.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'id' => 'integer',
-        'real_money_balance' => 'real',
-        'bonus_balance' => 'real',
-        'bonus_parameter' => 'real'
-    ];
+    
 }

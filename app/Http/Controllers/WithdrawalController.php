@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-//use DB;
+use DB;
 use Response;
 
 use App\Models\Customer;
@@ -23,8 +23,10 @@ class WithdrawalController extends Controller
     public function __construct()
     {
         //apply middleware
-        $this->middleware('checkcustomer', ['only' => [
-            'index',
+        $this->middleware('getcustomer', ['only' => [
+            'index'
+        ]]);
+        $this->middleware('getcustomer:true', ['only' => [
             'store'
         ]]);
     }
@@ -37,10 +39,8 @@ class WithdrawalController extends Controller
     public function index(Request $request)
     {
         $customer = $request->attributes->get('customer');
-                
-        $withdrawals = $customer->withdrawals()->get();
-        
-        return $withdrawals;
+
+        return Response::json($customer->getMyWithdrawals(), 200);
     }
 
     /**
@@ -61,36 +61,44 @@ class WithdrawalController extends Controller
      */
     public function store(Request $request)
     {
-        //todo: lock db
-
+            
         $customer = $request->attributes->get('customer');
 
         $withdrawal = new Withdrawal();
 
-        $input = $withdrawal->getFillableFromArray(Input::all());
-        $input['customer_id'] = $customer->id;
+        $input = $withdrawal->extractValidColumns(Input::all());
 
-        if (!$withdrawal->validate($input)) {
+        $input['customer_id'] = $customer->getData('id');
+
+        if (!$withdrawal->validateInsert($input)) {
             return Response::json(array('error' => 'Parameters failed validation!', 'validation' => $withdrawal->errors()), 422);
-        };
+        }
 
-        $withdrawal->fill($input);
-        //$withdrawal->customer_id = $customer->id;
-        //$withdrawal->customer()->associate($customer);
+        if ($input['amount'] > $customer->getData('real_money_balance')) {
+            return Response::json(array('error' => 'Insufficient funds. Customer can only withdraw up to '.$customer->getData('real_money_balance')), 400);
+        }
 
-        if ($withdrawal->amount > $customer->real_money_balance) {
-            return Response::json(array('error' => 'Insufficient funds. Customer can only withdraw up to '.$customer->real_money_balance), 400);
-        };
+        $withdrawal->fillData($input);
 
-        $customer->real_money_balance -= $withdrawal->amount;
+        $new_real_money_balance = $customer->getData('real_money_balance') - $withdrawal->getData('amount');
+        $customer->setData('real_money_balance', $new_real_money_balance);
 
         try{
-            $withdrawal->save();
-            $customer->save();
-            return Response::json($customer, 201);
+            //DB::beginTransaction();
+
+            $success = $withdrawal->insertRecord() && $customer->updateRecord();
+
+            if (!$success) {
+                DB::rollBack();
+                return Response::json(array('error' => 'Error occurred while inserting or updating record. Transaction has been cancelled and rolled back.'),400);
+            }
+
+            DB::commit();
+            return Response::json($customer->getData(),200);
         }
         catch (\Exception $e){
-            return Response::json(array('error' => 'Data Not Acceptable'), 406);
+            DB::rollBack();
+            return Response::json(array('error' => $e->getMessage()),406); //'Data Not Acceptable'), 406);
         }
     }
 
