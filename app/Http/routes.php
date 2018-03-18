@@ -27,6 +27,8 @@ Route::group(['prefix' => 'api/v1'], function()
 	    );
     });
 
+	Route::post('report/transactions', 'ReportController@transactions');
+
 });
 
 // Route::get('/', 'WelcomeController@index');
