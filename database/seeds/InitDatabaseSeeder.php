@@ -7,7 +7,9 @@ use \App\Models\Country;
 use Illuminate\Database\Seeder;
 
 // Allows Model Manipulation
-use Illuminate\Database\Eloquent\Model;
+// use Illuminate\Database\Eloquent\Model;
+
+use Illuminate\Support\Facades\DB;
 
 class InitDatabaseSeeder extends Seeder
 {
@@ -18,7 +20,7 @@ class InitDatabaseSeeder extends Seeder
      */
     public function run()
     {
-        Model::unguard();     
+        // Model::unguard();     
 
         // seed countries table
         $countries = array(
@@ -276,10 +278,12 @@ class InitDatabaseSeeder extends Seeder
         // Loop through each claim above and create the record for them in the database
         foreach ($countries as $country)
         {
-            Country::create($country);
+            // Country::create($country);
+            $query = "INSERT INTO countries (id, name) VALUES (:id, :name)";
+            DB::statement(DB::raw($query), $country);
         }
 
-        Model::reguard();
+        // Model::reguard();
 
         $this->command->info('Global Database Initialisation Complete.');
     }

@@ -1,7 +1,9 @@
 <?php
 
-use Illuminate\Database\Schema\Blueprint;
+// use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+
+use Illuminate\Support\Facades\DB;
 
 class CreateCountriesTable extends Migration
 {
@@ -12,11 +14,23 @@ class CreateCountriesTable extends Migration
      */
     public function up()
     {
-        Schema::create('countries', function (Blueprint $table) {                
-            $table->char('id',2)->primary();
-            $table->string('name');
-            $table->timestamps();
-        });
+        $query = "CREATE TABLE countries (
+                      id   char(2)      NOT NULL PRIMARY KEY
+                     ,name varchar(255) NOT NULL
+                  )
+                  DEFAULT CHARACTER SET=utf8
+                  COLLATE=utf8_unicode_ci
+                  ENGINE=InnoDB";
+
+        DB::statement(DB::raw($query));
+
+        // Schema::create('countries', function (Blueprint $table) {                
+        //     $table->char('id',2)->primary();
+        //     $table->string('name');
+
+        //     $table->engine = 'InnoDB';
+        //     $table->charset = 'utf8';
+        // });
     }
 
     /**
@@ -26,6 +40,10 @@ class CreateCountriesTable extends Migration
      */
     public function down()
     {
-        Schema::drop('countries');
+        $query = "DROP TABLE countries";
+
+        DB::statement(DB::raw($query));
+
+        // Schema::drop('countries');
     }
 }
