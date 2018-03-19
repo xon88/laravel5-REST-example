@@ -176,7 +176,7 @@ ServerName localhost
 **Assumptions:**
 * Prerequisites above are met
 * You have a CentOS machine (some of the following commands are CentOS-specific)
-* You have a sites-available and sites-enabled Apache setup
+* You have a <code>sites-available</code> & <code>sites-enabled</code> Apache setup
 * The following setup will be used (these can be changed in the commands below according to your needs)
 * code will reside under <code>/var/www/dev.local</code>
   * hostname = <code>dev.local</code>
@@ -405,7 +405,7 @@ These are the Endpoints provided by the API. [Postman](https://www.getpostman.co
 
 #### Deposits
 
-- **<code>GET</code> <code>[hostname]/api/v1/customer[customer_id]/deposit</code>**
+- **<code>GET</code> <code>[hostname]/api/v1/customer/[customer_id]/deposit</code>**
 
 	Returns a list of all the customer's deposits.
 
@@ -417,11 +417,11 @@ These are the Endpoints provided by the API. [Postman](https://www.getpostman.co
 
 #### Withdrawals
 
-- **<code>GET</code> <code>[hostname]/api/v1/customer[customer_id]/withdrawal</code>**
+- **<code>GET</code> <code>[hostname]/api/v1/customer/[customer_id]/withdrawal</code>**
 
 	Returns a list of all the customer's withdrawals.
 
-- **<code>POST</code> [hostname]/api/v1/customer/[customer_id]/withdrawal**
+- **<code>POST</code> <code>[hostname]/api/v1/customer/[customer_id]/withdrawal</code>**
 
 	Creates a new withdrawal for the customer with <code>[customer_id]</code> and updates his balance (if enough funds are available), by passing the following attributes as **<code>form-data</code>** in the body. Returns the updated customer record.
     * <code>amount</code> >0 Amount to be withdrawn.
@@ -436,6 +436,7 @@ These are the Endpoints provided by the API. [Postman](https://www.getpostman.co
     * <code>to</code> Report End Date (format dd/mm/yyyy - default today)
 
 <br>
+
 ### Postman collection
 
 I created a collection which can be imported into Postman (paste raw text):
@@ -960,9 +961,6 @@ I created a collection which can be imported into Postman (paste raw text):
 
 </p>
 </details>
-
-<br>
-**Start sending requests and enjoy =)**
 
 <br>
 
