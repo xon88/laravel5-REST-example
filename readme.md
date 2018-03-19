@@ -277,7 +277,7 @@ sudo chmod -R 777 storage/
 >777 is not a good idea here but for dev purposes should be fine
 
 
-In CentOS, you need to set write permissions in SELinux
+In CentOS, you need to set write permissions in SELinux:
 ```
 su -c "chcon -R -h -t httpd_sys_script_rw_t /var/www/dev.local/storage/"
 su -c "chcon -R -h -t httpd_sys_script_rw_t /var/www/dev.local/logs/"
@@ -997,7 +997,9 @@ I used Laravel 5.1 for the implementation of this project, with grouped and nest
 <br>
 
 ### Omissions, vulnerabilities, future enhancements
+* To do: No unit tests were implemented
 * No security and authentication was implemented
+* The unneeded extras included with the fresh laravel installation were not removed
 * Currency was not implemented
 * Validation is basic and not too much attention was given to SQL sanitization
 * Only <code>PUT</code> full row updates were implemented (vs. <code>PATCH</code> = partial update)
