@@ -1,14 +1,15 @@
 
 # laravel5-REST-example
 
-This is a simple REST API created with [Laravel 5.1](https://laravel.com/) to show the basics of how to go about setting up migrations, seeds, routes, controllers, middleware and models. The project does not include any authentication as it was developed as a basic in-house example. It was initially started with the use of Eloquent ORM and Query Builder, which functionality is in-built to the fresh laravel installation, however it was then completely re-factored to avoid the use of ORMs and Query Builders, and all SQL queries were re-written as raw queries.
+This is a simple REST API created with [Laravel 5.1](https://laravel.com/) to show the basics of how to go about setting up migrations, seeds, routes, controllers, middleware and models. The project does not include any authentication as it was developed as a basic in-house example. It was initially started with the use of Eloquent ORM and Query Builder, which functionality is in-built to the fresh laravel installation, however it was then completely re-factored to avoid the use of ORMs and Query Builders. Therefore, all SQL queries were re-written as raw queries and Models where written from scratch without extending Eloquent's Model.
 
+<br>
 
 ## Getting Started
 
 ### Prerequisites
 
-The API was tested on a CentOS 7 VM as a PHP webserver. Laravel 5.1 requires php 5.6. Below are all instructions of how to setup this VM from scratch. If you already have an environment setup, the requirements are:
+The API was tested on a CentOS 7 VM as a PHP webserver. Laravel 5.1 requires PHP 5.6. Below are all instructions of how to setup this VM from scratch. If you already have an environment setup, the requirements are:
 * Apache webserver
 * MySQL (MariaDB on CentOS)
 * Git
@@ -21,22 +22,22 @@ The API was tested on a CentOS 7 VM as a PHP webserver. Laravel 5.1 requires php
 <p>
 
 * Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-* [Filezilla](https://filezilla-project.org/download.php) and [Notepad++](https://notepad-plus-plus.org/) might also prove useful.
 * Download [CentOS7 64-bit ISO](https://www.centos.org/download/)
 
-
-[Youtube Instructions:](https://www.youtube.com/watch?v=O1nF7HQAJGw)
-* Create a new Linux RedHat 64-bit VM (default 1GB RAM and 8GB HDD are enough).
-* Start VM and Install CentOS7 simple PHP webserver installation
-* If you do not get an option for 64-bit, you need to enable Virtualization settings from your BIOS.
-* Start VM and Install CentOS7 simple PHP webserver installation
+[Youtube instructions for the steps below:](https://www.youtube.com/watch?v=O1nF7HQAJGw)
+* Create a new Linux RedHat 64-bit VM (default 1GB RAM and 8GB HDD are enough)
+* If you do not get an option for 64-bit, you need to enable Virtualization settings from your BIOS
+* Start VM and Install CentOS7 as a simple PHP webserver installation
   * Basic Web Server -> Tick PHP Support
   * Choose correct time
   * Setup root password and users
   * Change VM's Network Settings to Bridged Network Connection
 
+<br>
 
-Login as root and run:
+Login as root.
+
+Install php-common:
 ```
 yum install php-common
 ```
@@ -77,7 +78,7 @@ firewall-cmd --permanent --add-service=mysql
 firewall-cmd --reload
 ```
 
-Run:
+Install php-mysql and update packages:
 ```
 yum -y install php-mysql
 yum -y update
@@ -96,7 +97,7 @@ Creating Virtual Hosts Settings:
 mkdir /etc/httpd/sites-available
 mkdir /etc/httpd/sites-enabled
 ```
-Open conf file:
+>Open conf file:
 ```
 vi /etc/httpd/conf/httpd.conf
 ```
@@ -145,13 +146,14 @@ yum -y install epel-release
 yum -y install php-mcrypt*
 ```
 
-Update from php 5.4 to 5.6:
-https://withdave.com/2017/06/upgrading-php-5-6-x-later-centos7-via-yum-ius-repo/
+Update to PHP 5.6:
+>CentOS7 comes with PHP 5.4 by default, but Laravel 5.1 requires at least PHP 5.6
 ```
 yum install https://centos7.iuscommunity.org/ius-release.rpm
 yum install yum-plugin-replace
 yum replace --replace-with php56u php
 ```
+>[More Info...](https://withdave.com/2017/06/upgrading-php-5-6-x-later-centos7-via-yum-ius-repo/)
 
 Set Servername:
 ```
@@ -167,19 +169,22 @@ ServerName localhost
 </details>
 
 
+<br>
 
 ### Installation
 
 **Assumptions:**
-* Pre-requisites above are met
+* Prerequisites above are met
 * You have a CentOS machine (some of the following commands are CentOS-specific)
 * You have a sites-available and sites-enabled Apache setup
-* The following setup will be used (these can be changed according to your needs)
-  * code will reside under /var/www/dev.local
-  * hostname = dev.local
-  * new database schema name = mydatabase
-  * new database user & password = dbuser / mypassword
-  * new linux user = projuser
+* The following setup will be used (these can be changed in the commands below according to your needs)
+* code will reside under <code>/var/www/dev.local</code>
+  * hostname = <code>dev.local</code>
+  * new database schema name = <code>mydatabase</code>
+  * new database user & password = <code>dbuser / mypassword</code>
+  * new linux user = <code>projuser</code>
+
+<br>
 
 Login as root.
 
@@ -194,7 +199,7 @@ create database mydatabase;
 quit
 ```
 
-Create a file for your virtual host in /etc/httpd/sites-available:
+Create a file for your virtual host in <code>/etc/httpd/sites-available</code>:
 ```
 vi /etc/httpd/sites-available/dev.local.conf
 
@@ -206,7 +211,7 @@ vi /etc/httpd/sites-available/dev.local.conf
   CustomLog    /var/www/dev.local/logs/requests.log combined
 </VirtualHost>
 ```
->[More Info](https://www.digitalocean.com/community/tutorials/how-to-set-up-apache-virtual-hosts-on-centos-7)
+>[More Info...](https://www.digitalocean.com/community/tutorials/how-to-set-up-apache-virtual-hosts-on-centos-7)
 
 Enable the hosts (symlink):
 ```
@@ -233,30 +238,30 @@ chmod -R 775 /var/www
 chown -R projuser:apache /var/www
 ```
 
-Login as the project user:
+Login as the project user and navigate to the directory:
 ```
 su projuser
 cd /var/www/dev.local
 ```
 
-Make your user the owner
+Make your user the owner:
 ```
 sudo chown -R projuser:apache /var/www/dev.local
 ```
 
-Make sure directory is empty - if not empty it and also remove hidden files
+Make sure directory is empty - if not empty it and also remove hidden files:
 ```
 rm -R /var/www/dev.local/*
 rm -R /var/www/dev.local/.*
 ```
 
-Clone repo - get clone link from github
-(don't forget the . at the end to clone in current directory without creating a new folder)
+Clone repo - get clone link from github:
+>Don't forget the . at the end to clone in current directory without creating a new folder
 ```
 git clone https://github.com/xon88/laravel5-REST-example.git .
 ```
 
-Turn off git marking files as changed if permissions have changed
+Turn off git marking files as changed if permissions have changed:
 ```
 git config core.filemode false
 git config --global core.filemode false
@@ -272,7 +277,7 @@ sudo chmod -R 777 storage/
 >777 is not a good idea here but for dev purposes should be fine
 
 
-Only if using CentOS, you need to set write permissions in SELinux
+In CentOS, you need to set write permissions in SELinux
 ```
 su -c "chcon -R -h -t httpd_sys_script_rw_t /var/www/dev.local/storage/"
 su -c "chcon -R -h -t httpd_sys_script_rw_t /var/www/dev.local/logs/"
@@ -283,7 +288,7 @@ Check that all is fine with apache by restarting it:
 sudo systemctl restart httpd.service
 ```
 
-Install dependencies:
+Install project dependencies:
 ```
 composer install --no-dev
 ```
@@ -304,7 +309,8 @@ Make your user the owner and apache as group:
 sudo chown -R projuser:apache /var/www/dev.local
 ```
 
-Generate application key - should be written automatically to .env file
+Generate application key:
+>Should be written to .env file automatically
 ```
 sudo php artisan key:generate
 ```
@@ -315,7 +321,7 @@ vi .env
 
 ...
 APP_ENV=production
-APP_DEBUG=false //set to true if you need to debug any problems
+APP_DEBUG=false ##set to true if you need to debug any problems
 APP_KEY=[already set by previous command]
 
 DB_HOST=localhost
@@ -331,7 +337,7 @@ php artisan migrate
 php artisan db:seed
 ```
 
-Restart apache:
+Restart Apache:
 ```
 sudo systemctl restart httpd.service
 ```
@@ -347,17 +353,92 @@ ip addr
 ```
 
 Add virtual hosts in host file on your host OS
-On windows: C:/Windows/System32/drivers/etc/hosts
-Edit host file as Administrator and add line:
+>On windows: <code>C:/Windows/System32/drivers/etc/hosts</code>
+>Edit host file as Administrator and add line:
 ```
 [yourVMsIPaddress] dev.local
 ```
 
+<br>
+
 ## Usage (API Consumption)
 
-[Postman](https://www.getpostman.com/) proved to be a good choice to test the consumption of an API.
+These are the Endpoints provided by the API. [Postman](https://www.getpostman.com/) proved to be a good choice to test the consumption of an API.
 
-Open Postman and import this collection (paste raw text):
+### Endpoints
+
+#### Customers
+
+- **<code>GET</code> <code>[hostname]/api/v1/customer</code>**
+
+	Returns a list of all customers.
+
+- **<code>GET</code> <code>[hostname]/api/v1/customer/[customer_id]</code>**
+
+	Returns the record of customer with <code>[customer_id]</code>
+    
+- **<code>POST</code> <code>[hostname]/api/v1/customer</code>**
+
+	Creates a new customer by passing the following attributes as **<code>form-data</code>** in the body. Returns the new customer record.
+    * <code>first_name</code>
+    * <code>last_name</code>
+    * <code>gender</code> M=Male, F=Female, O=Other, U=Unknown
+    * <code>country_code</code> eg. MT=Malta
+    * <code>email</code> Must be unique
+    * <code>bonus_parameter</code> Optional - The percentage deposit bonus to apply at every 3rd deposit (5-20, default random)
+    * <code>real_money_balance</code> Optional (default 0)
+    * <code>bonus_balance</code> Optional (default 0)
+
+- **<code>PUT</code> <code>[hostname]/api/v1/customer/[customer_id]</code>**
+
+	Updates the customer specified with <code>[customer_id]</code>, by passing the following attributes as **<code>x-www-form-urlencoded</code>** in the body. Returns the updated customer record.
+    Header **<code>Content-Type</code>** must be set as **<code>application/x-www-form-urlencoded</code>**.
+    * <code>first_name</code>
+    * <code>last_name</code>
+    * <code>gender</code> M=Male, F=Female, O=Other, U=Unknown
+    * <code>country_code</code> eg. MT=Malta
+    * <code>email</code> Must be unique
+    * <code>bonus_parameter</code> 5-20
+    * <code>real_money_balance</code> Optional
+    * <code>bonus_balance</code> Optional
+
+
+#### Deposits
+
+- **<code>GET</code> <code>[hostname]/api/v1/customer[customer_id]/deposit</code>**
+
+	Returns a list of all the customer's deposits.
+
+- **<code>POST</code> <code>[hostname]/api/v1/customer/[customer_id]/deposit</code>**
+
+	Creates a new deposit for the customer with <code>[customer_id]</code> and updates his balance, by passing the following attributes as **<code>form-data</code>** in the body. Returns the updated customer record.
+    * <code>amount</code> >0 Amount to be deposited.
+
+
+#### Withdrawals
+
+- **<code>GET</code> <code>[hostname]/api/v1/customer[customer_id]/withdrawal</code>**
+
+	Returns a list of all the customer's withdrawals.
+
+- **<code>POST</code> [hostname]/api/v1/customer/[customer_id]/withdrawal**
+
+	Creates a new withdrawal for the customer with <code>[customer_id]</code> and updates his balance (if enough funds are available), by passing the following attributes as **<code>form-data</code>** in the body. Returns the updated customer record.
+    * <code>amount</code> >0 Amount to be withdrawn.
+
+
+#### Reporting
+
+- **<code>POST</code> <code>[hostname]/api/v1/report/transactions</code>**
+
+	Retrieves a new report counting and summing the deposits and withdrawals of unique customers who have made at least 1 transaction during the period of days specified (defaults to last 7 days if not specified). Groups by date and customer's country. Optionally dates can be specified by passing the following attributes as **<code>form-data</code>** in the body:
+    * <code>from</code> Report Start Date (format dd/mm/yyyy - default 7 days ago)
+    * <code>to</code> Report End Date (format dd/mm/yyyy - default today)
+
+<br>
+### Postman collection
+
+I created a collection which can be imported into Postman (paste raw text):
 <details><summary>**CLICK HERE for collection**</summary>
 <p>
 
@@ -880,9 +961,10 @@ Open Postman and import this collection (paste raw text):
 </p>
 </details>
 
+<br>
+**Start sending requests and enjoy =)**
 
-Start sending requests and enjoy =)
-
+<br>
 
 ## API Specifications
 
@@ -909,85 +991,22 @@ number and total amount of both, deposits and withdrawals) per country and date 
 >
 >* Financial operations (deposit/withdrawal) needs to be implemented in a way that ensures data integrity also for situations where different transaction requests are made at the same moment.
 
+<br>
+
+### Implementation
+I used Laravel 5.1 for the implementation of this project, with grouped and nested routes, providing RESTful endpoints which return JSON data and correct HTTP status codes for each request. Since I had to avoid the use of Eloquent, I implemented my own ElegantModel class, where I placed all common model functionality, and extended this class for each model I needed. This way, I minimized code duplication and made it as dynamic as possible. I used a middleware to check that the customer exists and load their details, when customer_id needed to be passed in the endpoint URL. I added a parameter in the middleware which locks the customer's row for update when the request is a financial operation, to maintain data integrity. Apart from this, I also implemented an optimistic locking solution for the customer table (version). I did not implement a controller for the countries, for which I seeded all the data.
+
+<br>
 
 ### Omissions, vulnerabilities, future enhancements
-* No security and authentication is implemented
-* Currency is not implemented
-* Validation is basic and not too much attention was given to SQL sanitization.
-* Only PUT full row updates are implemented (vs. PATCH = partial update)
-* No DELETE endpoints are implemented
+* No security and authentication was implemented
+* Currency was not implemented
+* Validation is basic and not too much attention was given to SQL sanitization
+* Only <code>PUT</code> full row updates were implemented (vs. <code>PATCH</code> = partial update)
+* No <code>DELETE</code> endpoints were implemented
+* A separate wallet table would have been ideal for storing balances, since only the row in this table would have to be locked for update on financial operations, instead of locking the whole row in the customers table
 
-
-### Endpoints
-
-#### Customers
-
-- **<code>GET</code> [hostname]/api/v1/customer**
-
-	Returns a list of all customers.
-
-- **<code>GET</code> [hostname]/api/v1/customer/[customer_id]**
-
-	Returns the record of customer with [customer_id]
-    
-- **<code>POST</code> [hostname]/api/v1/customer**
-
-	Creates a new customer by passing the following attributes as **form-data** in the body. Returns the new customer record.
-    * <code>first_name</code>
-    * <code>last_name</code>
-    * <code>gender</code> M=Male, F=Female, O=Other, U=Unknown
-    * <code>country_code</code> eg. MT=Malta
-    * <code>email</code> Must be unique
-    * <code>bonus_parameter</code> Optional - The percentage deposit bonus to apply at every 3rd deposit (5-20, default random)
-    * <code>real_money_balance</code> Optional (default 0)
-    * <code>bonus_balance</code> Optional (default 0)
-
-- **<code>PUT</code> [hostname]/api/v1/customer/[customer_id]**
-
-	Updates the customer specified with [customer_id], by passing the following attributes as **x-www-form-urlencoded** in the body. Returns the updated customer record.
-    Header **Content-Type** must be set as **application/x-www-form-urlencoded**.
-    * <code>first_name</code>
-    * <code>last_name</code>
-    * <code>gender</code> M=Male, F=Female, O=Other, U=Unknown
-    * <code>country_code</code> eg. MT=Malta
-    * <code>email</code> Must be unique
-    * <code>bonus_parameter</code> 5-20
-    * <code>real_money_balance</code> Optional
-    * <code>bonus_balance</code> Optional
-
-
-#### Deposits
-
-- **<code>GET</code> [hostname]/api/v1/customer[customer_id]/deposit**
-
-	Returns a list of all the customer's deposits.
-
-- **<code>POST</code> [hostname]/api/v1/customer/[customer_id]/deposit**
-
-	Creates a new deposit for the customer with [customer_id] and updates his balance, by passing the following attributes as **form-data** in the body. Returns the updated customer record.
-    * <code>amount</code> >0 Amount to be deposited.
-
-
-#### Withdrawals
-
-- **<code>GET</code> [hostname]/api/v1/customer[customer_id]/withdrawal**
-
-	Returns a list of all the customer's withdrawals.
-
-- **<code>POST</code> [hostname]/api/v1/customer/[customer_id]/withdrawal**
-
-	Creates a new withdrawal for the customer with [customer_id] and updates his balance (if enough funds are available), by passing the following attributes as **form-data** in the body. Returns the updated customer record.
-    * <code>amount</code> >0 Amount to be withdrawn.
-
-
-#### Reporting
-
-- **<code>POST</code> [hostname]/api/v1/report/transactions**
-
-	Retrieves a new report counting and summing the deposits and withdrawals of unique customers who have made at least 1 transaction during the period of days specified (defaults to last 7 days if not specified). Groups by date and customer's country. Optionally dates can be specified by passing the following attributes as **form-data** in the body:
-    * <code>from</code> Report Start Date (format dd/mm/yyyy - default 7 days ago)
-    * <code>to</code> Report End Date (format dd/mm/yyyy - default today)
-
+<br>
 
 ## Good to know:
 
@@ -1003,14 +1022,14 @@ setenforce 1
 ```
 
 
-Changing IP of the VM (CentOS)
+#### Changing IP of the VM (CentOS)
 ```
 sudo dhclient -r
 sudo dhclient
 ```
 
 
-Dropping and migrating a fresh database:
+#### Dropping and migrating a fresh database:
 ```
 su projuser
 cd /var/www/dev.local
@@ -1025,6 +1044,8 @@ php artisan cache:clear
 php artisan migrate
 php artisan db:seed
 ```
+
+<br>
 
 ## License
 
