@@ -271,7 +271,6 @@ Create required directories:
 ```
 mkdir vendor
 mkdir logs
-mkdir bootstrap/cache
 sudo chmod -R 777 storage/
 ```
 >777 is not a good idea here but for dev purposes should be fine
