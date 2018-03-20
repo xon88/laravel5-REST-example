@@ -49,7 +49,7 @@ firewall-cmd --reload
 systemctl enable httpd
 ```
 
-Install MariaDB and register as service
+Install MariaDB and register as service:
 
 >Check if installed:
 ```
@@ -60,18 +60,20 @@ rpm -qa | grep mariadb
 yum install mariadb-server
 systemctl enable mariadb.service
 ```
-Restart VM and login as root again
+Restart VM and login as root again:
 ```
 reboot
 ```
 
-Open my.cnf file in any text editor. Add "skip-grant-tables" (without quotes) at the end of [mysqld] section and save the file
+Open my.cnf file in any text editor. Add <code>skip-grant-tables</code> at the end of <code>[mysqld]</code> section. Be careful to add it under the correct section.
 ```
 vi /etc/my.cnf
     
 [mysqld]
 skip-grant-tables
 ```
+>Save and exit.
+
 Enable External connections to the database:
 ```
 firewall-cmd --permanent --add-service=mysql
@@ -84,6 +86,7 @@ yum -y install php-mysql
 yum -y update
 ```
 Install SFTP and enable as service:
+>Will be useful if you'd want to edit some files through Filezilla
 ```
 yum -y install vsftpd
 
@@ -101,27 +104,27 @@ mkdir /etc/httpd/sites-enabled
 ```
 vi /etc/httpd/conf/httpd.conf
 ```
+>Change:
+```
+&lt;Directory /var/www/&gt;
+...
+AllowOverride None
+...
+&lt;/Directory&gt;
+```
+>to:
+```
+&lt;Directory /var/www/&gt;
+...
+AllowOverride All
+...
+&lt;/Directory&gt;
+```
 >Put the following at the end of file:
 ```
 IncludeOptional sites-enabled/*.conf
 ```
->Change
-```
-Directory /var/www/
-...
-AllowOverride None
-...
-/Directory
-```
->to
-```
-Directory /var/www/
-...
-AllowOverride All
-...
-/Directory
-```
->Save file and exit.
+>Save and exit.
 
 Install git:
 ```
@@ -163,7 +166,7 @@ vi /etc/httpd/conf/httpd.conf
 ```
 ServerName localhost
 ```
->Save and exit
+>Save and exit.
 
 </p>
 </details>
@@ -211,14 +214,14 @@ vi /etc/httpd/sites-available/dev.local.conf
   CustomLog    /var/www/dev.local/logs/requests.log combined
 </VirtualHost>
 ```
->[More Info...](https://www.digitalocean.com/community/tutorials/how-to-set-up-apache-virtual-hosts-on-centos-7)
+>Save and exit. [More Info...](https://www.digitalocean.com/community/tutorials/how-to-set-up-apache-virtual-hosts-on-centos-7)
 
-Enable the hosts (symlink):
+Enable the host (create symlink):
 ```
 ln -s /etc/httpd/sites-available/dev.local.conf /etc/httpd/sites-enabled/dev.local.conf
 ```
 
-Create project user:
+Create project user and set password:
 ```
 adduser projuser
 passwd projuser
@@ -231,7 +234,7 @@ usermod -aG apache projuser
 ```
 >By default, on CentOS, members of the wheel group have sudo privileges.
 
-Create project folder:
+Create project folder and change permissions and ownership:
 ```
 mkdir /var/www/dev.local
 chmod -R 775 /var/www
@@ -242,11 +245,6 @@ Login as the project user and navigate to the directory:
 ```
 su projuser
 cd /var/www/dev.local
-```
-
-Make your user the owner:
-```
-sudo chown -R projuser:apache /var/www/dev.local
 ```
 
 Make sure directory is empty - if not empty it and also remove hidden files:
@@ -297,12 +295,6 @@ Create .env file
 sudo cp .env.example .env
 ```
 
-Clear cache:
-```
-php artisan cache:clear
-composer dump-autoload
-```
-
 Make your user the owner and apache as group:
 ```
 sudo chown -R projuser:apache /var/www/dev.local
@@ -311,7 +303,7 @@ sudo chown -R projuser:apache /var/www/dev.local
 Generate application key:
 >Should be written to .env file automatically
 ```
-sudo php artisan key:generate
+php artisan key:generate
 ```
 
 Edit .env file:
@@ -329,16 +321,34 @@ DB_USERNAME=dbuser
 DB_PASSWORD=mypassword
 ...
 ```
+>Save and exit.
 
-Migrate and seed db:
+Clear caches:
 ```
-php artisan migrate
-php artisan db:seed
+php artisan config:clear
+php artisan cache:clear
+composer dump-autoload
 ```
 
 Restart Apache:
 ```
 sudo systemctl restart httpd.service
+```
+
+Reboot:
+```
+sudo reboot
+```
+
+Log back in as <code>projuser</code> and navigate to project folder:
+```
+cd /var/www/dev.local
+```
+
+Migrate and seed db:
+```
+php artisan migrate
+php artisan db:seed
 ```
 
 Check virtualhosts:
@@ -359,6 +369,12 @@ Add virtual hosts in host file on your host OS
 ```
 
 #### Running Unit Tests (Optional)
+
+Install development packages:
+>Before we ran composer install with the --no-dev option. Now we need to install the development packages.
+```
+composer install
+```
 
 Run the tests:
 >Running with phpunit version installed in laravel's vendor directory to avoid version problems
