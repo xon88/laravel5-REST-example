@@ -1,7 +1,7 @@
 
 # laravel5-REST-example
 
-This is a simple REST API created with [Laravel 5.1](https://laravel.com/) to show the basics of how to go about setting up migrations, seeds, routes, controllers, middleware and models. The project does not include any authentication as it was developed as a basic in-house example. It was initially started with the use of Eloquent ORM and Query Builder, which functionality is in-built to the fresh laravel installation, however it was then completely re-factored to avoid the use of ORMs and Query Builders. Therefore, all SQL queries were re-written as raw queries and Models where written from scratch without extending Eloquent's Model.
+This is a simple REST API created with [Laravel 5.1](https://laravel.com/) to show the basics of how to go about setting up migrations, seeds, routes, controllers, middleware, models, and unit tests. The project does not include any authentication as it was developed as a basic in-house example. It was initially started with the use of Eloquent ORM and Query Builder, which functionality is in-built to the fresh laravel installation, however it was then completely re-factored to avoid the use of ORMs and Query Builders. Therefore, all SQL queries were re-written as raw queries and Models where written from scratch without extending Eloquent's Model.
 
 <br>
 
@@ -356,6 +356,32 @@ Add virtual hosts in host file on your host OS
 >Edit host file as Administrator and add line:
 ```
 [yourVMsIPaddress] dev.local
+```
+
+#### Running Unit Tests (Optional)
+
+Run the tests:
+>Running with phpunit version installed in laravel's vendor directory to avoid version problems
+```
+vendor/bin/phpunit
+```
+>Wait for tests to complete successfully
+
+Clear test records from database:
+>Drop and re-create DB, migrate and seed data again
+```
+mysql
+
+drop database mydatabase;
+create database mydatabase;
+
+quit
+
+php artisan cache:clear
+composer dump-autoload
+
+php artisan migrate
+php artisan db:seed
 ```
 
 <br>
@@ -996,14 +1022,13 @@ I used Laravel 5.1 for the implementation of this project, with grouped and nest
 <br>
 
 ### Omissions, vulnerabilities, future enhancements
-* To do: No unit tests were implemented
 * No security and authentication was implemented
-* The unneeded extras included with the fresh laravel installation were not removed
+* Unused extras included with the laravel installation were not cleared
 * Currency was not implemented
 * Validation is basic and not too much attention was given to SQL sanitization
 * Only <code>PUT</code> full row updates were implemented (vs. <code>PATCH</code> = partial update)
 * No <code>DELETE</code> endpoints were implemented
-* A separate wallet table would have been ideal for storing balances, since only the row in this table would have to be locked for update on financial operations, instead of locking the whole row in the customers table
+* A separate <code>wallet</code> table would have been ideal for storing balances, since only the row in this table would have to be locked for update on financial operations, instead of locking the whole row in the customers table
 
 <br>
 

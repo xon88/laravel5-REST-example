@@ -94,7 +94,7 @@ class WithdrawalController extends Controller
             }
 
             DB::commit();
-            return Response::json($customer->getData(),200);
+            return Response::json($customer->getData(),201);
         }
         catch (\Exception $e){
             DB::rollBack();
