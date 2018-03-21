@@ -39,7 +39,7 @@ Login as root.
 
 Install php-common:
 ```
-yum install php-common
+yum -y install php-common
 ```
 
 Open Firewall for Apache and register as service:
@@ -57,22 +57,13 @@ rpm -qa | grep mariadb
 ```
 >Install:
 ```
-yum install mariadb-server
+yum -y install mariadb-server
 systemctl enable mariadb.service
 ```
 Restart VM and login as root again:
 ```
 reboot
 ```
-
-Open my.cnf file in any text editor. Add <code>skip-grant-tables</code> at the end of <code>[mysqld]</code> section. Be careful to add it under the correct section.
-```
-vi /etc/my.cnf
-    
-[mysqld]
-skip-grant-tables
-```
->Save and exit.
 
 Enable External connections to the database:
 ```
@@ -85,42 +76,29 @@ Install php-mysql and update packages:
 yum -y install php-mysql
 yum -y update
 ```
-Install SFTP and enable as service:
->Will be useful if you'd want to edit some files through Filezilla
-```
-yum -y install vsftpd
 
-systemctl enable vsftpd
-
-firewall-cmd --permanent --add-port=21/tcp
-firewall-cmd --reload
-```
-Creating Virtual Hosts Settings:
+##### Creating Virtual Hosts Settings:
 ```
 mkdir /etc/httpd/sites-available
 mkdir /etc/httpd/sites-enabled
 ```
->Open conf file:
+Open conf file:
 ```
 vi /etc/httpd/conf/httpd.conf
 ```
->Change:
+>Set servername (add the following line in it's appropriate section):
 ```
-&lt;Directory /var/www/&gt;
-...
-AllowOverride None
-...
-&lt;/Directory&gt;
+ServerName localhost
 ```
->to:
+>Change <code>AllowOverride None</code> to <code>AllowOverride All</code> under the <code>&lt;/Directory /var/www/&gt;</code> section
 ```
-&lt;Directory /var/www/&gt;
+Directory /var/www/
 ...
 AllowOverride All
 ...
-&lt;/Directory&gt;
+/Directory
 ```
->Put the following at the end of file:
+>Finally, add the following at the end of file:
 ```
 IncludeOptional sites-enabled/*.conf
 ```
@@ -152,21 +130,11 @@ yum -y install php-mcrypt*
 Update to PHP 5.6:
 >CentOS7 comes with PHP 5.4 by default, but Laravel 5.1 requires at least PHP 5.6
 ```
-yum install https://centos7.iuscommunity.org/ius-release.rpm
-yum install yum-plugin-replace
-yum replace --replace-with php56u php
+yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+yum -y install yum-plugin-replace
+yum -y replace --replace-with php56u php
 ```
 >[More Info...](https://withdave.com/2017/06/upgrading-php-5-6-x-later-centos7-via-yum-ius-repo/)
-
-Set Servername:
-```
-vi /etc/httpd/conf/httpd.conf
-```
->Add the following line:
-```
-ServerName localhost
-```
->Save and exit.
 
 </p>
 </details>
@@ -195,10 +163,10 @@ Create Database and DB User:
 ```
 mysql
 
-grant all on *.* to ‘dbuser’@’%’ identified by ‘mypassword’ with grant option;
-
 create database mydatabase;
-	
+
+grant all on mydatabase.* to ‘dbuser’@’localhost’ identified by ‘mypassword’;
+
 quit
 ```
 
@@ -237,8 +205,8 @@ usermod -aG apache projuser
 Create project folder and change permissions and ownership:
 ```
 mkdir /var/www/dev.local
-chmod -R 775 /var/www
-chown -R projuser:apache /var/www
+chmod -R 775 /var/www/dev.local
+chown -R projuser:apache /var/www/dev.local
 ```
 
 Login as the project user and navigate to the directory:
@@ -269,10 +237,7 @@ Create required directories:
 ```
 mkdir vendor
 mkdir logs
-sudo chmod -R 777 storage/
 ```
->777 is not a good idea here but for dev purposes should be fine
-
 
 In CentOS, you need to set write permissions in SELinux:
 ```
@@ -330,21 +295,6 @@ php artisan cache:clear
 composer dump-autoload
 ```
 
-Restart Apache:
-```
-sudo systemctl restart httpd.service
-```
-
-Reboot:
-```
-sudo reboot
-```
-
-Log back in as <code>projuser</code> and navigate to project folder:
-```
-cd /var/www/dev.local
-```
-
 Migrate and seed db:
 ```
 php artisan migrate
@@ -384,15 +334,28 @@ vendor/bin/phpunit
 >Wait for tests to complete successfully
 
 Clear test records from database:
->Drop and re-create DB, migrate and seed data again
+>Change to root user:
+```
+su
+```
+>Drop and re-create DB
 ```
 mysql
 
 drop database mydatabase;
 create database mydatabase;
 
-quit
+grant all on mydatabase.* to ‘dbuser’@’localhost’ identified by ‘mypassword’;
 
+quit
+```
+>Change back to project user:
+```
+su projuser
+cd /var/www/dev.local
+```
+>Migrate and seed data again
+```
 php artisan cache:clear
 composer dump-autoload
 
@@ -1069,6 +1032,30 @@ sudo dhclient
 ```
 
 
+#### Problems with database - Access denied
+How to disable the database privilege system. This is obviously only for development purposes.
+>Open my.cnf file in any text editor. Add <code>skip-grant-tables</code> at the end of <code>[mysqld]</code> section. Be careful to add it under the correct section.
+```
+vi /etc/my.cnf
+    
+[mysqld]
+skip-grant-tables
+```
+>Save, exit and reboot.
+
+#### FTP access on Centos7:
+>Will be useful if you'd want to edit some files through Filezilla
+
+Install vsftpd and enable as a service:
+```
+yum -y install vsftpd
+
+systemctl enable vsftpd
+
+firewall-cmd --permanent --add-port=21/tcp
+firewall-cmd --reload
+```
+
 #### Dropping and migrating a fresh database:
 ```
 su projuser
@@ -1083,6 +1070,12 @@ composer dump-autoload
 php artisan cache:clear
 php artisan migrate
 php artisan db:seed
+```
+
+#### Storage folder
+You might encounter some problems since laravel requires write permissions to the storage folder. Only for development purposes you can set 777 privileges.
+```
+sudo chmod -R 777 /var/www/dev.local/storage/
 ```
 
 <br>
